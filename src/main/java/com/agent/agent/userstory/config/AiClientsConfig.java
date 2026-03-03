@@ -1,9 +1,10 @@
 package com.agent.agent.userstory.config;
 
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.ai.chat.ChatClient;
+
 
 /**
  * Provides named ChatClient beans (draftClient and criticClient). If a ChatClient

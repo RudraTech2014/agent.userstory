@@ -3,7 +3,7 @@ package com.agent.agent.userstory.controller;
 import com.agent.agent.userstory.model.dto.SpecRunRequest;
 import com.agent.agent.userstory.runtime.RunState;
 import com.agent.agent.userstory.runtime.RunStore;
-import com.agent.agent.userstory.service.AiDraftingService;
+import com.agent.agent.userstory.service.SpecAgentProService;
 import com.agent.agent.userstory.tech.TechReferenceKey;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +18,11 @@ import java.util.Map;
 public class SpecProRunController {
 
     private final RunStore runStore;
-    private final AiDraftingService draftingService;
+    private final SpecAgentProService agentService;
 
-    public SpecProRunController(RunStore runStore, AiDraftingService draftingService) {
+    public SpecProRunController(RunStore runStore, SpecAgentProService agentService) {
         this.runStore = runStore;
-        this.draftingService = draftingService;
+        this.agentService = agentService;
     }
 
     @PostMapping
@@ -38,9 +38,8 @@ public class SpecProRunController {
 
         RunState state = (key == null) ? runStore.createRun() : runStore.createRun(key);
 
-        // start async streaming drafting
-        draftingService.streamSpecMd(state, req.getFeatureIdea(), key)
-                .subscribe();
+        // start async orchestration (draft -> critic -> refine)
+        agentService.startRun(state, req.getFeatureIdea(), key).subscribe();
 
         return ResponseEntity.ok().body(Map.of("runId", state.getRunId()));
     }
