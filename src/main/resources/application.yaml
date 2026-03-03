@@ -1,3 +1,54 @@
 spring:
   application:
     name: agent.userstory
+
+providers:
+  gemini:
+    # URL template used by GeminiAdapter for single-chat/generate requests. {model} will be replaced.
+    apiUrlTemplate: "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+    # Batch endpoint used to send batchGenerateContent requests. {model} will be replaced.
+    batchUrl: "https://generativelanguage.googleapis.com/v1beta/models/{model}:batchGenerateContent"
+
+    # Default model to use when none provided in incoming request
+    model: "gemini-1.5-flash"
+
+    # Default model for batch APIs (often a flash/large batch-capable variant)
+    batchModel: "gemini-2.5-flash"
+
+    # API key - prefer environment variables; this is kept here only to show placeholder
+    apiKey: "${GEMINI_API_KEY:${GOOGLE_AI_API_KEY:}}"
+
+    # Header name to send the key (commonly x-goog-api-key). If you set to Authorization, the adapter will send Bearer <key>
+    apiKeyHeader: "x-goog-api-key"
+
+    # If true the adapter will format request bodies for Google GenAI (system_instruction + contents)
+    useGoogleGenApi: true
+
+    # If true the adapter will send apiKey as ?key= query param first; else header-first.
+    preferQueryParam: false
+
+    # Optional x-goog-user-project header for billing/project-scoped requests. Leave blank if not used.
+    userProject: ""
+
+    # Batch-specific settings
+    batch:
+      # Display name used when creating a batch job
+      displayName: "p14-content-batch"
+
+      # Maximum number of individual requests to include in a single batch job
+      maxRequestsPerBatch: 500
+
+      # Total timeout for the batch operation (ISO-8601 duration or spring duration; adapter should parse/convert)
+      timeout: 300s
+
+      # Optional: a default inputConfig template keys that the GeminiBatchProvider can use when constructing batch payloads
+      inputConfig:
+        # Example: requestsPathKey = requests.requests (the nested path expected by the batch API)
+        requestsPathKey: "requests.requests"
+
+  openai:
+    # Placeholder for symmetry; keep if you implement OpenAI batch endpoints in future
+    batchUrl: "https://api.openai.com/v1/batch/generate"
+    batchModel: "gpt-4o-mini"
+    timeout: 300s
