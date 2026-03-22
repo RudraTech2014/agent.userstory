@@ -5,6 +5,7 @@ import com.agent.agent.userstory.runtime.RunState;
 import com.agent.agent.userstory.runtime.RunStore;
 import com.agent.agent.userstory.service.SpecAgentProService;
 import com.agent.agent.userstory.tech.TechReferenceKey;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,13 +27,16 @@ public class SpecProRunController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> createRun(@RequestBody SpecRunRequest req) {
+    public ResponseEntity<Map<String, String>> createRun(@Valid @RequestBody SpecRunRequest req) {
         TechReferenceKey key = null;
         if (req.getTechReferenceKey() != null) {
             try {
                 key = TechReferenceKey.valueOf(req.getTechReferenceKey());
             } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().build();
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "INVALID_TECH_REFERENCE_KEY",
+                        "message", "techReferenceKey must be a valid enum value"
+                ));
             }
         }
 

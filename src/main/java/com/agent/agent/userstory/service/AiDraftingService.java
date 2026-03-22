@@ -79,10 +79,47 @@ public class AiDraftingService {
             Map<String, String> files = new HashMap<>();
             files.put("spec.md", state.getSpecMd());
             files.put("plan.md", "Plan for " + featureIdea + "\n- backend classes\n- frontend components\n");
-            files.put("data-model.md", "Data model: TODO\n");
-            files.put("contracts/api-spec.json", "{ \"paths\": {} }");
-            files.put("quickstart.md", "Quickstart: TODO\n");
-            files.put("research.md", "Research notes: TODO\n");
+            files.put("data-model.md", """
+                    # Data Model
+                    - Feature: %s
+                    - Entity: SpecRun (runId, phase, iteration, createdAt)
+                    - Entity: SpecArtifact (runId, filePath, content, updatedAt)
+                    - Entity: CriticReport (runId, status, issues)
+                    """.formatted(featureIdea == null ? "feature" : featureIdea));
+            files.put("contracts/api-spec.json", """
+                    {
+                      "openapi": "3.0.3",
+                      "info": {
+                        "title": "SpecPro API",
+                        "version": "1.0.0"
+                      },
+                      "paths": {
+                        "/api/specpro/runs": {
+                          "post": {
+                            "summary": "Create run for %s"
+                          }
+                        },
+                        "/api/specpro/runs/{runId}/events": {
+                          "get": {
+                            "summary": "Stream run events"
+                          }
+                        }
+                      }
+                    }
+                    """.formatted(featureIdea == null ? "feature" : featureIdea.replace("\"", "'")));
+            files.put("quickstart.md", """
+                    # Quickstart
+                    1. Start the API service.
+                    2. POST /api/specpro/runs with featureIdea.
+                    3. Connect to /api/specpro/runs/{runId}/events for live events.
+                    4. Read final_bundle event for generated artifacts.
+                    """);
+            files.put("research.md", """
+                    # Research Notes
+                    - Keep exactly three scenarios in spec.md: HAPPY_PATH, EDGE_CASE, ERROR_CASE.
+                    - Prefer incremental refinement over full rewrites.
+                    - Ensure artifacts are internally consistent with the selected stack.
+                    """);
 
             SpecBundle bundle = new SpecBundle(featureKey, files);
             String json = mapper.writeValueAsString(bundle);
