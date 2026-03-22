@@ -5,14 +5,7 @@ import com.agent.agent.userstory.runtime.RunState;
 import com.agent.agent.userstory.runtime.RunStore;
 import com.agent.agent.userstory.service.SpecAgentProService;
 import com.agent.agent.userstory.tech.TechReferenceKey;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,26 +29,6 @@ public class SpecProRunController {
     }
 
     @PostMapping
-    @Operation(
-            summary = "Create a new SpecPro run",
-            description = "Starts asynchronous draft/critic/refine execution and returns the runId."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Run created",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(example = "{\"runId\":\"9f36cfff-6fb5-4ab7-9fbb-4f091ea4f5b0\"}")
-            )
-    )
-    @ApiResponse(
-            responseCode = "400",
-            description = "Validation error or invalid techReferenceKey",
-            content = @Content(
-                    mediaType = "application/json",
-                    examples = @ExampleObject(value = "{\"error\":\"VALIDATION_ERROR\",\"message\":\"featureIdea featureIdea is required\"}")
-            )
-    )
     public ResponseEntity<Map<String, String>> createRun(@Valid @RequestBody SpecRunRequest req) {
         TechReferenceKey key = null;
         if (req.getTechReferenceKey() != null) {
