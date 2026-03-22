@@ -18,6 +18,8 @@ import java.util.Map;
 @RequestMapping("/api/specpro/runs")
 public class SpecProRunController {
 
+    private static final Logger log = LoggerFactory.getLogger(SpecProRunController.class);
+
     private final RunStore runStore;
     private final SpecAgentProService agentService;
 
@@ -41,6 +43,7 @@ public class SpecProRunController {
         }
 
         RunState state = (key == null) ? runStore.createRun() : runStore.createRun(key);
+        log.info("Created run {} for featureIdea='{}' with techReferenceKey={}", state.getRunId(), req.getFeatureIdea(), key);
 
         // start async orchestration (draft -> critic -> refine)
         agentService.startRun(state, req.getFeatureIdea(), key).subscribe();
