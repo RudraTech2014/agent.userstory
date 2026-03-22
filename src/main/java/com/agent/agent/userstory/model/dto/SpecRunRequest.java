@@ -1,6 +1,9 @@
 package com.agent.agent.userstory.model.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class SpecRunRequest {
+    @NotBlank(message = "featureIdea is required")
     private String featureIdea;
     private String techReferenceKey;
 

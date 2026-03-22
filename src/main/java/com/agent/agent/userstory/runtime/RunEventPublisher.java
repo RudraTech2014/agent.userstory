@@ -51,5 +51,15 @@ public class RunEventPublisher {
                 .data(message)
                 .build();
         state.getSink().tryEmitNext(ev);
+        state.getSink().tryEmitComplete();
+    }
+
+    public void emitDone(RunState state) {
+        ServerSentEvent<String> ev = ServerSentEvent.<String>builder()
+                .event("done")
+                .data(String.format("{\"runId\":\"%s\",\"phase\":\"DONE\",\"iteration\":%d}", state.getRunId(), state.getIteration()))
+                .build();
+        state.getSink().tryEmitNext(ev);
+        state.getSink().tryEmitComplete();
     }
 }

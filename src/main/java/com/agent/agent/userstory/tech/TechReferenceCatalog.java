@@ -14,10 +14,10 @@ public class TechReferenceCatalog {
 
     static {
         Map<String, String> javaAngularVersions = new HashMap<>();
-        javaAngularVersions.put("Spring Boot", "3.5.10");
+        javaAngularVersions.put("Spring Boot", "3.5.11");
         javaAngularVersions.put("Angular", "21.1.4");
         javaAngularVersions.put("PostgreSQL", "18.2");
-        javaAngularVersions.put("Spring AI", "1.1.x");
+        javaAngularVersions.put("Spring AI", "1.1.2");
 
         TechReference javaAngular = new TechReference(
                 List.of("Spring Boot", "Angular", "PostgreSQL", "Spring AI"),
