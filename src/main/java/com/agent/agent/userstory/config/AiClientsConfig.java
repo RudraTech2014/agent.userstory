@@ -4,6 +4,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 
 
 /**
@@ -14,13 +15,17 @@ import org.springframework.beans.factory.ObjectProvider;
 @Configuration
 public class AiClientsConfig {
 
-    @Bean
-    public ChatClient draftClient(ObjectProvider<ChatClient> chatClients) {
-        return chatClients.getIfAvailable();
+    @Bean(name = "draftClient")
+    @ConditionalOnBean(ChatClient.Builder.class)
+    public ChatClient draftClient(ObjectProvider<ChatClient.Builder> chatClientBuilders) {
+        ChatClient.Builder builder = chatClientBuilders.getIfAvailable();
+        return builder.build();
     }
 
-    @Bean
-    public ChatClient criticClient(ObjectProvider<ChatClient> chatClients) {
-        return chatClients.getIfAvailable();
+    @Bean(name = "criticClient")
+    @ConditionalOnBean(ChatClient.Builder.class)
+    public ChatClient criticClient(ObjectProvider<ChatClient.Builder> chatClientBuilders) {
+        ChatClient.Builder builder = chatClientBuilders.getIfAvailable();
+        return builder.build();
     }
 }

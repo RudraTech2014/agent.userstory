@@ -5,11 +5,11 @@ import com.agent.agent.userstory.runtime.RunState;
 import com.agent.agent.userstory.service.AiDraftingService;
 import com.agent.agent.userstory.tech.TechReferenceCatalog;
 import com.agent.agent.userstory.tech.TechReferenceKey;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+import org.springframework.lang.Nullable;
 import reactor.core.publisher.Mono;
-
-import java.util.Locale;
 
 @Service
 public class ChatAiDraftingService {
@@ -18,7 +18,7 @@ public class ChatAiDraftingService {
     private final AiDraftingService fallback;
     private final RunEventPublisher publisher;
 
-    public ChatAiDraftingService(ChatClient draftClient, AiDraftingService fallback, RunEventPublisher publisher) {
+    public ChatAiDraftingService(@Nullable @Qualifier("draftClient") ChatClient draftClient, AiDraftingService fallback, RunEventPublisher publisher) {
         this.draftClient = draftClient;
         this.fallback = fallback;
         this.publisher = publisher;
@@ -64,7 +64,6 @@ public class ChatAiDraftingService {
     }
 
     public Mono<Void> buildBundleFromStructuredOutput(RunState state, String featureIdea) {
-        // keep your existing implementation as-is
-        return Mono.empty();
+        return fallback.buildBundle(state, featureIdea);
     }
 }
