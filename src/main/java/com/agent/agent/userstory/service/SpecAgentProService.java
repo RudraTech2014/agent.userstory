@@ -5,7 +5,6 @@ import com.agent.agent.userstory.model.dto.SpecBundle;
 import com.agent.agent.userstory.runtime.RunEventPublisher;
 import com.agent.agent.userstory.runtime.RunArchiveService;
 import com.agent.agent.userstory.runtime.RunState;
-import com.agent.agent.userstory.runtime.RunStore;
 import com.agent.agent.userstory.tech.TechReferenceKey;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -13,12 +12,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.Instant;
+
 @Service
 public class SpecAgentProService {
 
     private static final Logger log = LoggerFactory.getLogger(SpecAgentProService.class);
 
-    private final RunStore runStore;
     private final RunEventPublisher publisher;
     private final RunArchiveService archiveService;
     private final ChatAiDraftingService draftingService;
@@ -26,8 +27,7 @@ public class SpecAgentProService {
     private final AiCriticService criticService;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public SpecAgentProService(RunStore runStore, RunEventPublisher publisher, RunArchiveService archiveService, ChatAiDraftingService draftingService, AiDraftingService bundleService, AiCriticService criticService) {
-        this.runStore = runStore;
+    public SpecAgentProService(RunEventPublisher publisher, RunArchiveService archiveService, ChatAiDraftingService draftingService, AiDraftingService bundleService, AiCriticService criticService) {
         this.publisher = publisher;
         this.archiveService = archiveService;
         this.draftingService = draftingService;
@@ -43,13 +43,11 @@ public class SpecAgentProService {
                     publisher.emitStatus(state, "DONE", state.getIteration());
                     publisher.emitDone(state);
                     archiveService.archiveSuccess(state);
-                    runStore.removeRun(state.getRunId());
                     log.info("Run {} completed in {} ms", state.getRunId(), Duration.between(state.getCreatedAt(), Instant.now()).toMillis());
                 })
                 .doOnError(err -> {
                     publisher.emitError(state, "Run failed: " + err.getMessage());
                     archiveService.archiveError(state, err.getMessage());
-                    runStore.removeRun(state.getRunId());
                     log.error("Run {} failed in {} ms: {}", state.getRunId(), Duration.between(state.getCreatedAt(), Instant.now()).toMillis(), err.getMessage());
                 });
     }

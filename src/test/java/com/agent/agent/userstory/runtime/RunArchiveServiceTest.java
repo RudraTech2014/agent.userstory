@@ -23,5 +23,6 @@ class RunArchiveServiceTest {
         Assertions.assertTrue(Files.exists(archived));
         String json = Files.readString(archived);
         Assertions.assertTrue(json.contains("\"runId\""));
+        Files.deleteIfExists(archived);
     }
 }
