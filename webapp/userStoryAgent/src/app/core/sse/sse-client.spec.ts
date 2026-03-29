@@ -1,3 +1,4 @@
+import { NgZone } from '@angular/core';
 import { SseClient } from './sse-client';
 
 type Handler = (event: MessageEvent<string>) => void;
@@ -42,7 +43,8 @@ describe('SseClient', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalThis.EventSource = MockEventSource as any;
 
-    const client = new SseClient();
+    const zone = { run: (fn: () => void) => fn() } as NgZone;
+    const client = new SseClient(zone);
     const output: string[] = [];
     let bundleSpec = '';
 

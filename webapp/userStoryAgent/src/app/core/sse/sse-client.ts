@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   CriticEvent,
@@ -14,9 +14,16 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class SseClient {
+  constructor(private readonly zone: NgZone) {}
+
   connect(runId: string): Observable<SpecProSseEvent> {
     return new Observable<SpecProSseEvent>((subscriber) => {
       const source = new EventSource(`/api/specpro/runs/${runId}/events`);
+      let doneReceived = false;
+
+      const emitInZone = (event: SpecProSseEvent) => {
+        this.zone.run(() => subscriber.next(event));
+      };
 
       const onStatus = (event: MessageEvent<string>) => {
         const parsed = this.safeParse<{ phase?: string; iteration?: number }>(event.data);
@@ -25,46 +32,55 @@ export class SseClient {
           phase: parsed?.phase ?? 'UNKNOWN',
           iteration: parsed?.iteration ?? 0
         };
-        subscriber.next(payload);
+        emitInZone(payload);
       };
 
       const onSpecMdDelta = (event: MessageEvent<string>) => {
         const payload: SpecMdDeltaEvent = { type: 'spec_md_delta', delta: event.data ?? '' };
-        subscriber.next(payload);
+        emitInZone(payload);
       };
 
       const onCritic = (event: MessageEvent<string>) => {
         const critic = this.safeParse<CriticResult>(event.data);
         if (!critic) {
-          subscriber.next({ type: 'error', message: 'Unable to parse critic payload' } satisfies ErrorEvent);
+          emitInZone({ type: 'error', message: 'Unable to parse critic payload' } satisfies ErrorEvent);
           return;
         }
 
-        subscriber.next({ type: 'critic', critic } satisfies CriticEvent);
+        emitInZone({ type: 'critic', critic } satisfies CriticEvent);
       };
 
       const onFinalBundle = (event: MessageEvent<string>) => {
         const bundle = this.safeParse<SpecBundle>(event.data);
         if (!bundle) {
-          subscriber.next({ type: 'error', message: 'Unable to parse final_bundle payload' } satisfies ErrorEvent);
+          emitInZone({ type: 'error', message: 'Unable to parse final_bundle payload' } satisfies ErrorEvent);
           return;
         }
 
-        subscriber.next({ type: 'final_bundle', bundle } satisfies FinalBundleEvent);
+        emitInZone({ type: 'final_bundle', bundle } satisfies FinalBundleEvent);
       };
 
       const onDone = (event: MessageEvent<string>) => {
         const done = this.safeParse<DoneEvent>(event.data) ?? { type: 'done' };
-        subscriber.next({ type: 'done', runId: done.runId, phase: done.phase, iteration: done.iteration });
-        subscriber.complete();
+        doneReceived = true;
+        emitInZone({ type: 'done', runId: done.runId, phase: done.phase, iteration: done.iteration });
+        this.zone.run(() => subscriber.complete());
       };
 
       const onErrorEvent = (event: MessageEvent<string>) => {
-        subscriber.next({ type: 'error', message: event.data ?? 'Unknown run error' } satisfies ErrorEvent);
+        if (typeof event.data !== 'string' || !event.data.trim()) {
+          return;
+        }
+
+        emitInZone({ type: 'error', message: event.data } satisfies ErrorEvent);
       };
 
       const onSseError = () => {
-        subscriber.error(new Error('SSE connection error'));
+        if (doneReceived) {
+          return;
+        }
+
+        this.zone.run(() => subscriber.error(new Error('SSE connection error')));
       };
 
       source.addEventListener('status', onStatus as EventListener);
