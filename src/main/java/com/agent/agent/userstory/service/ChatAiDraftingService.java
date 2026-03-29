@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class ChatAiDraftingService {
@@ -57,7 +60,12 @@ public class ChatAiDraftingService {
                         "\n\nConstraints: Use only allowed tech: " + (allowed.isBlank() ? "(no explicit constraints)" : allowed) +
                         "\n\nReturn spec.md only.";
 
+        log.info("Run {} sending drafting request via draftClient={} for techReferenceKey={}",
+                state.getRunId(), draftClient.getClass().getName(), key);
+
+        Instant startedAt = Instant.now();
         AtomicBoolean emittedAnyChunk = new AtomicBoolean(false);
+        AtomicInteger chunkCount = new AtomicInteger(0);
 
         return draftClient.prompt()
                 .system(system)
@@ -67,10 +75,13 @@ public class ChatAiDraftingService {
                 .doOnNext(text -> {
                     if (text != null && !text.isEmpty()) {
                         emittedAnyChunk.set(true);
+                        chunkCount.incrementAndGet();
                         state.appendSpecChunk(text);
                         publisher.emitSpecMdDelta(state, text);
                     }
                 })
+                .doOnComplete(() -> log.info("Run {} completed drafting stream in {} ms with {} chunk(s)",
+                        state.getRunId(), Duration.between(startedAt, Instant.now()).toMillis(), chunkCount.get()))
                 .then(Mono.defer(() -> {
                     if (!emittedAnyChunk.get()) {
                         log.warn("Draft stream produced no content for run {}, using fallback drafting service", state.getRunId());
