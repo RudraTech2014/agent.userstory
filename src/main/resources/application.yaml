@@ -1,6 +1,16 @@
 spring:
   application:
     name: agent.userstory
+  ai:
+    # Prevent startup failures when env vars are missing in local/dev.
+    google:
+      genai:
+        project-id: "${GOOGLE_GENAI_PROJECT_ID:local-project}"
+        api-key: "${GOOGLE_GENAI_API_KEY:${GOOGLE_AI_API_KEY:${GEMINI_API_KEY:dummy-key}}}"
+    openai:
+      api-key: "${OPENAI_API_KEY:dummy-key}"
+      speech:
+        api-key: "${OPENAI_SPEECH_API_KEY:${OPENAI_API_KEY:dummy-key}}"
 
 providers:
   gemini:
