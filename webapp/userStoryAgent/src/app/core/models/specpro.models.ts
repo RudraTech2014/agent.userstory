@@ -24,35 +24,46 @@ export interface CriticResult {
   issues: CriticIssue[];
 }
 
-export interface StatusEvent {
-  event: 'status';
+export interface SpecRunResult {
+  runId: string;
   phase?: string;
-  message?: string;
+  iteration?: number;
+  specMd?: string;
+  critic?: CriticResult;
+  finalBundle?: SpecBundle;
+}
+
+export interface StatusEvent {
+  type: 'status';
+  phase: string;
+  iteration: number;
 }
 
 export interface SpecMdDeltaEvent {
-  event: 'spec_md_delta';
-  path?: string;
-  delta?: string;
+  type: 'spec_md_delta';
+  delta: string;
 }
 
 export interface CriticEvent {
-  event: 'critic';
-  result: CriticResult;
+  type: 'critic';
+  critic: CriticResult;
 }
 
 export interface FinalBundleEvent {
-  event: 'final_bundle';
+  type: 'final_bundle';
   bundle: SpecBundle;
 }
 
 export interface ErrorEvent {
-  event: 'error';
+  type: 'error';
   message: string;
 }
 
 export interface DoneEvent {
-  event: 'done';
+  type: 'done';
+  runId?: string;
+  phase?: string;
+  iteration?: number;
 }
 
 export type SpecProSseEvent =
