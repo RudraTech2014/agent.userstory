@@ -1,0 +1,43 @@
+<div class="layout">
+  <section class="left-panel">
+    <h2>Spec Pro</h2>
+
+    <label for="featureIdea">Feature idea</label>
+    <textarea
+      id="featureIdea"
+      [(ngModel)]="featureIdea"
+      rows="5"
+      placeholder="Describe the feature to generate"
+    ></textarea>
+
+    <label for="constraints">Constraints (optional)</label>
+    <textarea
+      id="constraints"
+      [(ngModel)]="constraints"
+      rows="3"
+      placeholder="Optional constraints"
+    ></textarea>
+
+    <app-tech-reference-select
+      [selected]="techReferenceKey"
+      (selectedChange)="techReferenceKey = $event"
+    />
+
+    <button type="button" [disabled]="isGenerating" (click)="generate()">
+      {{ isGenerating ? 'Generating…' : 'Generate Spec' }}
+    </button>
+
+    <div class="progress">
+      <p><strong>Run:</strong> {{ runId || 'n/a' }}</p>
+      <p><strong>Phase:</strong> {{ phase }}</p>
+      <p><strong>Iteration:</strong> {{ iteration }}</p>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </div>
+  </section>
+
+  <section class="right-panel">
+    <app-spec-live-viewer [content]="liveSpecMd" />
+    <app-bundle-tabs [bundle]="finalBundle" />
+    <app-critic-issues [critic]="criticResult" />
+  </section>
+</div>
