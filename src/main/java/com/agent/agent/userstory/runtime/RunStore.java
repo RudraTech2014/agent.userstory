@@ -30,7 +30,7 @@ public class RunStore {
 
     public RunState createRun() {
         String runId = UUID.randomUUID().toString();
-        Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().multicast().onBackpressureBuffer();
+        Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().replay().limit(256);
         RunState state = new RunState(runId, sink);
         cache.put(runId, state);
         return state;
@@ -38,7 +38,7 @@ public class RunStore {
 
     public RunState createRun(TechReferenceKey key) {
         String runId = UUID.randomUUID().toString();
-        Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().multicast().onBackpressureBuffer();
+        Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().replay().limit(256);
         RunState state = new RunState(runId, sink, key);
         cache.put(runId, state);
         return state;
