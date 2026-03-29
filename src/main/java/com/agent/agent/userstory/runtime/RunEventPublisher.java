@@ -2,6 +2,7 @@ package com.agent.agent.userstory.runtime;
 
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Sinks;
 
 /**
  * Publishes standard SSE events into a run's sink.
@@ -15,7 +16,7 @@ public class RunEventPublisher {
                     .event("status")
                     .data(String.format("{\"phase\":\"%s\",\"iteration\":%d}", phase, iteration))
                     .build();
-            state.getSink().tryEmitNext(ev);
+            emitNext(state, ev);
         } catch (Exception e) {
             // best-effort
         }
@@ -26,7 +27,7 @@ public class RunEventPublisher {
                 .event("spec_md_delta")
                 .data(chunk)
                 .build();
-        state.getSink().tryEmitNext(ev);
+        emitNext(state, ev);
     }
 
     public void emitCritic(RunState state, String criticJson) {
@@ -34,7 +35,7 @@ public class RunEventPublisher {
                 .event("critic")
                 .data(criticJson)
                 .build();
-        state.getSink().tryEmitNext(ev);
+        emitNext(state, ev);
     }
 
     public void emitFinalBundle(RunState state, String bundleJson) {
@@ -42,7 +43,7 @@ public class RunEventPublisher {
                 .event("final_bundle")
                 .data(bundleJson)
                 .build();
-        state.getSink().tryEmitNext(ev);
+        emitNext(state, ev);
     }
 
     public void emitError(RunState state, String message) {
@@ -50,8 +51,8 @@ public class RunEventPublisher {
                 .event("error")
                 .data(message)
                 .build();
-        state.getSink().tryEmitNext(ev);
-        state.getSink().tryEmitComplete();
+        emitNext(state, ev);
+        emitComplete(state);
     }
 
     public void emitDone(RunState state) {
@@ -59,7 +60,15 @@ public class RunEventPublisher {
                 .event("done")
                 .data(String.format("{\"runId\":\"%s\",\"phase\":\"DONE\",\"iteration\":%d}", state.getRunId(), state.getIteration()))
                 .build();
-        state.getSink().tryEmitNext(ev);
-        state.getSink().tryEmitComplete();
+        emitNext(state, ev);
+        emitComplete(state);
+    }
+
+    private void emitNext(RunState state, ServerSentEvent<String> event) {
+        state.getSink().emitNext(event, (signalType, emitResult) -> emitResult == Sinks.EmitResult.FAIL_NON_SERIALIZED);
+    }
+
+    private void emitComplete(RunState state) {
+        state.getSink().emitComplete((signalType, emitResult) -> emitResult == Sinks.EmitResult.FAIL_NON_SERIALIZED);
     }
 }
